@@ -38,28 +38,30 @@ exports.createStudent = async (req, res) => {
 // Update student
 exports.updateStudent = async (req, res) => {
   try {
-    const { id } = req.params;
-    const updates = req.body;
-    
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: 'Invalid student ID' });
-    }
-
-    const student = await Student.findById(id);
+    const student = await Student.findById(req.params.id);
     if (!student) {
       return res.status(404).json({ message: 'Student not found' });
     }
-
-    // Update allowed fields
-    if (updates.firstName) student.firstName = updates.firstName;
-    if (updates.lastName) student.lastName = updates.lastName;
-    if (updates.email) student.email = updates.email;
     
+    Object.assign(student, req.body);
     const updatedStudent = await student.save();
     res.status(200).json(updatedStudent);
   } catch (error) {
-    console.error('Update error:', error);
     res.status(400).json({ message: error.message });
+  }
+};
+
+// Delete student
+exports.deleteStudent = async (req, res) => {
+  try {
+    const student = await Student.findById(req.params.id);
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+    
+    await student.remove();
+    res.status(200).json({ message: 'Student deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };

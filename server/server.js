@@ -15,7 +15,9 @@ const { apiLimiter, authLimiter } = require('./middleware/rateLimiter');
 const Student = require('./models/Student');
 
 // Import routes
+const authRoutes = require('./routes/auth');
 const apiRoutes = require('./routes/api');
+const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 
@@ -34,8 +36,10 @@ app.use((req, res, next) => {
     next();
 });
 
-// API routes
+// Mount routes
+app.use('/api/auth', authRoutes);
 app.use('/api', auth, apiRoutes);
+app.use('/api/users', userRoutes);
 
 // Auth routes
 app.post('/api/auth/login', authLimiter, catchAsync(async (req, res) => {
@@ -140,7 +144,7 @@ app.delete('/api/students/:id',
     })
 );
 
-// Global error handling
+// Error handling
 app.use(errorHandler);
 
 // Handle unhandled routes
@@ -148,29 +152,30 @@ app.all('*', (req, res, next) => {
     next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 
-// MongoDB connection
+// Database connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/academic_system', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
 })
 .then(() => {
-    console.log('Connected to MongoDB');
-    
-    // Start server
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
-        console.log(`Server running on http://localhost:${PORT}`);
-        console.log('\nAvailable endpoints:');
-        console.log('Auth:');
-        console.log('- POST   /api/auth/login');
-        console.log('\nStudents:');
-        console.log('- GET    /api/students         (Admin, Teacher)');
-        console.log('- GET    /api/students/:id     (Authenticated)');
-        console.log('- POST   /api/students');
-        console.log('- PUT    /api/students/:id     (Owner, Admin)');
-        console.log('- DELETE /api/students/:id     (Admin)');
-    });
+  console.log('Connected to MongoDB');
+  
+  // Start server
+  const PORT = process.env.PORT || 5002;
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+    console.log('\nAvailable endpoints:');
+    console.log('Auth:');
+    console.log('- POST   /api/auth/login');
+    console.log('\nStudents:');
+    console.log('- GET    /api/students         (Admin, Teacher)');
+    console.log('- GET    /api/students/:id     (Authenticated)');
+    console.log('- POST   /api/students');
+    console.log('- PUT    /api/students/:id     (Owner, Admin)');
+    console.log('- DELETE /api/students/:id     (Admin)');
+  });
 })
-.catch(err => {
-    console.error('MongoDB connection error:', err);
+.catch((error) => {
+  console.error('MongoDB connection error:', error);
+  process.exit(1);
 });

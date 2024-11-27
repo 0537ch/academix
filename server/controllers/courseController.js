@@ -42,22 +42,12 @@ exports.createCourse = async (req, res) => {
 // Update course
 exports.updateCourse = async (req, res) => {
   try {
-    const { id } = req.params;
-    const updates = req.body;
-    
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: 'Invalid course ID' });
-    }
-
-    const course = await Course.findById(id);
+    const course = await Course.findById(req.params.id);
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
-
-    Object.keys(updates).forEach((key) => {
-      course[key] = updates[key];
-    });
-
+    
+    Object.assign(course, req.body);
     const updatedCourse = await course.save();
     res.status(200).json(updatedCourse);
   } catch (error) {
@@ -68,17 +58,11 @@ exports.updateCourse = async (req, res) => {
 // Delete course
 exports.deleteCourse = async (req, res) => {
   try {
-    const { id } = req.params;
-    
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: 'Invalid course ID' });
-    }
-
-    const course = await Course.findById(id);
+    const course = await Course.findById(req.params.id);
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
-
+    
     await course.remove();
     res.status(200).json({ message: 'Course deleted successfully' });
   } catch (error) {
@@ -91,24 +75,19 @@ exports.enrollStudent = async (req, res) => {
   try {
     const { courseId, studentId } = req.params;
     
-    if (!mongoose.Types.ObjectId.isValid(courseId) || !mongoose.Types.ObjectId.isValid(studentId)) {
-      return res.status(400).json({ message: 'Invalid course or student ID' });
-    }
-
     const course = await Course.findById(courseId);
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
 
+    // Check if student is already enrolled
     if (course.students.includes(studentId)) {
       return res.status(400).json({ message: 'Student already enrolled in this course' });
     }
 
-    if (!course.canEnroll()) {
-      return res.status(400).json({ message: 'Course enrollment limit reached' });
-    }
+    course.students.push(studentId);
+    await course.save();
 
-    await course.enrollStudent(studentId);
     res.status(200).json({ message: 'Student enrolled successfully' });
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -120,20 +99,19 @@ exports.removeStudent = async (req, res) => {
   try {
     const { courseId, studentId } = req.params;
     
-    if (!mongoose.Types.ObjectId.isValid(courseId) || !mongoose.Types.ObjectId.isValid(studentId)) {
-      return res.status(400).json({ message: 'Invalid course or student ID' });
-    }
-
     const course = await Course.findById(courseId);
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
     }
 
+    // Check if student is enrolled
     if (!course.students.includes(studentId)) {
       return res.status(400).json({ message: 'Student not enrolled in this course' });
     }
 
-    await course.removeStudent(studentId);
+    course.students.pull(studentId);
+    await course.save();
+
     res.status(200).json({ message: 'Student removed successfully' });
   } catch (error) {
     res.status(400).json({ message: error.message });

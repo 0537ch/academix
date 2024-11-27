@@ -1,5 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { ThemeProvider } from "@material-tailwind/react";
 import './index.css';
 import App from './App';
 
@@ -9,6 +10,8 @@ const root = createRoot(container);
 
 root.render(
   <React.StrictMode>
-    <App />
+    <ThemeProvider>
+      <App />
+    </ThemeProvider>
   </React.StrictMode>
 );

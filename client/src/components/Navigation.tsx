@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Dialog } from '@headlessui/react';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 
 const navigation = [
-  { name: 'Dashboard', href: '/' },
+  { name: 'Dashboard', href: '/dashboard' },
   { name: 'Students', href: '/students' },
   { name: 'Courses', href: '/courses' },
   { name: 'Profile', href: '/profile' },
@@ -12,14 +12,27 @@ const navigation = [
 
 export default function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // Clear authentication data
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    // Close mobile menu if open
+    setMobileMenuOpen(false);
+    
+    // Redirect to login page
+    navigate('/login');
+  };
 
   return (
     <header className="bg-white shadow-sm">
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8" aria-label="Top">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center">
-              <span className="text-2xl font-bold text-primary-600">AcademiX</span>
+            <Link to="/dashboard" className="flex items-center">
+              <span className="text-2xl font-bold text-blue-600">AcademiX</span>
             </Link>
           </div>
           <div className="hidden md:flex md:items-center md:space-x-6">
@@ -27,14 +40,15 @@ export default function Navigation() {
               <Link
                 key={item.name}
                 to={item.href}
-                className="nav-link text-sm font-medium"
+                className="text-gray-600 hover:text-gray-900 text-sm font-medium"
               >
                 {item.name}
               </Link>
             ))}
             <button
+              onClick={handleLogout}
               type="button"
-              className="btn-primary text-sm font-medium"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               Sign Out
             </button>
@@ -56,8 +70,8 @@ export default function Navigation() {
         <div className="fixed inset-0 z-10" />
         <Dialog.Panel className="fixed inset-y-0 right-0 z-10 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
           <div className="flex items-center justify-between">
-            <Link to="/" className="-m-1.5 p-1.5">
-              <span className="text-2xl font-bold text-primary-600">AcademiX</span>
+            <Link to="/dashboard" className="-m-1.5 p-1.5">
+              <span className="text-2xl font-bold text-blue-600">AcademiX</span>
             </Link>
             <button
               type="button"
@@ -84,9 +98,9 @@ export default function Navigation() {
               </div>
               <div className="py-6">
                 <button
+                  onClick={handleLogout}
                   type="button"
-                  className="btn-primary w-full text-base font-semibold"
-                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   Sign Out
                 </button>
