@@ -1,10 +1,11 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 
 interface User {
-  _id: string;
-  username: string;
+  id: string;
   email: string;
-  role: 'admin' | 'user';
+  role: 'admin' | 'teacher' | 'student';
+  firstName: string;
+  lastName: string;
 }
 
 interface AuthContextType {
@@ -69,3 +70,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+export default AuthContext;

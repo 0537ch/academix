@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { toast } from 'react-toastify';
+import api from '../config/api';
 
 interface UserProfile {
   name: string;
@@ -28,16 +28,17 @@ export default function Profile() {
 
   const fetchProfile = async () => {
     try {
+      console.log('Fetching profile...');
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5002/api/users/profile', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      console.log('Token:', token);
+      const response = await api.get('/users/profile');
+      console.log('Profile response:', response.data);
       setProfile(response.data);
       setFormData(prev => ({ ...prev, name: response.data.name }));
       setLoading(false);
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      toast.error('Failed to load profile');
+    } catch (error: any) {
+      console.error('Error fetching profile:', error.response || error);
+      toast.error(error.response?.data?.message || 'Failed to load profile');
       setLoading(false);
     }
   };
@@ -56,7 +57,6 @@ export default function Profile() {
     }
 
     try {
-      const token = localStorage.getItem('token');
       const updateData: any = { name: formData.name };
       
       if (formData.currentPassword && formData.newPassword) {
@@ -64,9 +64,7 @@ export default function Profile() {
         updateData.newPassword = formData.newPassword;
       }
 
-      await axios.put('http://localhost:5002/api/users/profile', updateData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.put('/users/profile', updateData);
 
       toast.success('Profile updated successfully');
       setIsEditing(false);
@@ -113,26 +111,26 @@ export default function Profile() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <p className="text-sm font-medium text-gray-500">Name</p>
-                <p className="text-base text-gray-900">{profile?.name}</p>
+                <p className="text-base text-gray-900">{profile?.name || 'Not set'}</p>
               </div>
               <div className="space-y-2">
                 <p className="text-sm font-medium text-gray-500">Email</p>
-                <p className="text-base text-gray-900">{profile?.email}</p>
+                <p className="text-base text-gray-900">{profile?.email || 'Not set'}</p>
               </div>
               <div className="space-y-2">
                 <p className="text-sm font-medium text-gray-500">Role</p>
-                <p className="text-base text-gray-900 capitalize">{profile?.role}</p>
+                <p className="text-base text-gray-900 capitalize">{profile?.role || 'Not set'}</p>
               </div>
               <div className="space-y-2">
                 <p className="text-sm font-medium text-gray-500">Last Login</p>
                 <p className="text-base text-gray-900">
-                  {new Date(profile?.lastLogin || '').toLocaleString()}
+                  {profile?.lastLogin ? new Date(profile.lastLogin).toLocaleString() : 'Never'}
                 </p>
               </div>
               <div className="space-y-2">
                 <p className="text-sm font-medium text-gray-500">Member Since</p>
                 <p className="text-base text-gray-900">
-                  {new Date(profile?.createdAt || '').toLocaleDateString()}
+                  {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : 'Unknown'}
                 </p>
               </div>
             </div>

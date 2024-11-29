@@ -4,11 +4,15 @@ import Course from '../models/Course';
 // Get all courses
 export const getCourses = async (req: Request, res: Response) => {
   try {
+    console.log('Getting all courses...');
     const courses = await Course.find()
       .populate('teacher', 'firstName lastName')
       .populate('students', 'firstName lastName');
+    
+    console.log('Found courses:', courses.length);
     res.json(courses);
   } catch (error) {
+    console.error('Error fetching courses:', error);
     res.status(500).json({ message: 'Error fetching courses' });
   }
 };
@@ -16,16 +20,20 @@ export const getCourses = async (req: Request, res: Response) => {
 // Get course by ID
 export const getCourseById = async (req: Request, res: Response) => {
   try {
+    console.log('Getting course by ID:', req.params.id);
     const course = await Course.findById(req.params.id)
       .populate('teacher', 'firstName lastName')
       .populate('students', 'firstName lastName');
     
     if (!course) {
+      console.log('Course not found:', req.params.id);
       return res.status(404).json({ message: 'Course not found' });
     }
     
+    console.log('Found course:', course);
     res.json(course);
   } catch (error) {
+    console.error('Error fetching course:', error);
     res.status(500).json({ message: 'Error fetching course' });
   }
 };

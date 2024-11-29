@@ -2,10 +2,10 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 
-const AdminNavbar: React.FC = () => {
+const AdminNavbar = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const adminName = user?.username || 'Admin';
+  const adminName = user ? `${user.firstName} ${user.lastName}` : 'Admin';
 
   const handleLogout = () => {
     logout();

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { PlusIcon } from '@heroicons/react/24/outline';
+import { UserIcon, AcademicCapIcon, CalendarIcon } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
+import api from '../config/api';
+import { toast } from 'react-toastify';
 
 interface Student {
   _id: string;
@@ -8,6 +10,10 @@ interface Student {
   lastName: string;
   email: string;
   studentId: string;
+  courses: Array<{
+    name: string;
+    code: string;
+  }>;
   enrollmentDate: string;
 }
 
@@ -22,49 +28,28 @@ const Students = () => {
 
   const fetchStudents = async () => {
     try {
-      const response = await fetch('http://localhost:5002/api/students', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch students');
-      }
-
-      const data = await response.json();
-      setStudents(data);
+      const response = await api.get('/students');
+      setStudents(response.data.students);
       setLoading(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError('Failed to fetch students');
       setLoading(false);
+      toast.error('Failed to fetch students');
     }
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 p-4 rounded-md">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <div className="ml-3">
-            <h3 className="text-sm font-medium text-red-800">Error</h3>
-            <div className="mt-2 text-sm text-red-700">
-              <p>{error}</p>
-            </div>
-          </div>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-red-500 text-xl">{error}</div>
       </div>
     );
   }
@@ -76,7 +61,7 @@ const Students = () => {
         <button
           className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
-          <PlusIcon className="h-5 w-5 mr-2" />
+          <AcademicCapIcon className="h-5 w-5 mr-2" />
           Add Student
         </button>
       </div>

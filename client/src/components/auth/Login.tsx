@@ -34,7 +34,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5002/api/auth/login', {
+      const response = await fetch('http://localhost:7001/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -48,24 +48,21 @@ const Login = () => {
         throw new Error(data.message || 'An error occurred during login');
       }
 
-      // Store token
+      // Store token and user data
       localStorage.setItem('token', data.token);
-      
-      // Store user data and update auth context
       login(data.user);
-
-      // Show success message
       toast.success('Login successful!');
 
-      // Redirect based on role
+      // Redirect based on user role
       if (data.user.role === 'admin') {
         navigate('/admin/dashboard');
       } else {
         navigate('/dashboard');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to login');
-      toast.error(err instanceof Error ? err.message : 'Failed to login');
+      const error = err as Error;
+      setError(error.message);
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { PlusIcon, UserGroupIcon, ClockIcon, AcademicCapIcon } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
+import api from '../config/api';
+import { toast } from 'react-toastify';
 
 interface Course {
   _id: string;
@@ -35,49 +37,53 @@ const Courses = () => {
 
   const fetchCourses = async () => {
     try {
-      const response = await fetch('http://localhost:5002/api/courses', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch courses');
+      console.log('Fetching courses...');
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Please log in to view courses');
+        setLoading(false);
+        toast.error('Authentication required');
+        return;
       }
 
-      const data = await response.json();
-      setCourses(data);
+      const response = await api.get('/courses');
+      console.log('Courses response:', response.data);
+      setCourses(response.data);
       setLoading(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+    } catch (error: any) {
+      console.error('Error fetching courses:', error.response || error);
+      const errorMessage = error.response?.data?.message || 'Failed to fetch courses';
+      if (error.response?.status === 401) {
+        setError('Please log in to view courses');
+        toast.error('Authentication required');
+      } else {
+        setError(errorMessage);
+        toast.error(errorMessage);
+      }
       setLoading(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 p-4 rounded-md">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <div className="ml-3">
-            <h3 className="text-sm font-medium text-red-800">Error</h3>
-            <div className="mt-2 text-sm text-red-700">
-              <p>{error}</p>
-            </div>
-          </div>
-        </div>
+      <div className="flex flex-col items-center justify-center h-screen">
+        <div className="text-red-500 text-xl mb-4">{error}</div>
+        {error.includes('log in') && (
+          <button
+            onClick={() => window.location.href = '/login'}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            Go to Login
+          </button>
+        )}
       </div>
     );
   }
@@ -120,7 +126,7 @@ const Courses = () => {
               <div className="flex items-center space-x-4">
                 <AcademicCapIcon className="h-5 w-5 text-gray-400" />
                 <span className="text-sm text-gray-600">
-                  {course.teacher.firstName} {course.teacher.lastName}
+                  {course.teacher ? `${course.teacher.firstName} ${course.teacher.lastName}` : 'No Teacher Assigned'}
                 </span>
               </div>
               <div className="mt-2 flex items-center space-x-4">
