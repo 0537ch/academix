@@ -1,86 +1,47 @@
-import express, { Request, Response, NextFunction, Router } from 'express';
-import { authenticateToken } from '../middleware/auth';
-import {
-  getCourses,
-  getCourseById,
-  createCourse,
-  updateCourse,
-  deleteCourse,
-  addStudentToCourse,
-  removeStudentFromCourse
-} from '../controllers/courseController';
+import express from 'express';
+import { courseController } from '../controllers/courseController';
+import { authenticateToken as auth } from '../middleware/auth';
+import { adminOnly } from '../middleware/adminOnly';
 
-const router: Router = express.Router();
+const router = express.Router();
 
-// Course routes handlers
-const getCoursesHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+// Public routes (no authentication required)
+router.get('/', courseController.getAllCourses);
+router.get('/:id', courseController.getCourseById);
+
+// Protected routes (authentication required)
+router.use(auth);
+
+// Admin only routes
+router.post('/', async (req, res, next) => {
   try {
-    await getCourses(req, res);
+    await adminOnly(req, res, next);
+    await courseController.createCourse(req, res, next);
   } catch (error) {
     next(error);
   }
-};
+});
 
-const getCourseByIdHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+router.put('/:id', async (req, res, next) => {
   try {
-    await getCourseById(req, res);
+    await adminOnly(req, res, next);
+    await courseController.updateCourse(req, res, next);
   } catch (error) {
     next(error);
   }
-};
+});
 
-const createCourseHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+router.delete('/:id', async (req, res, next) => {
   try {
-    await createCourse(req, res);
+    await adminOnly(req, res, next);
+    await courseController.deleteCourse(req, res, next);
   } catch (error) {
     next(error);
   }
-};
+});
 
-const updateCourseHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    await updateCourse(req, res);
-  } catch (error) {
-    next(error);
-  }
-};
-
-const deleteCourseHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    await deleteCourse(req, res);
-  } catch (error) {
-    next(error);
-  }
-};
-
-const addStudentHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    await addStudentToCourse(req, res);
-  } catch (error) {
-    next(error);
-  }
-};
-
-const removeStudentHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    await removeStudentFromCourse(req, res);
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Routes with authentication
-router.all('*', authenticateToken);
-
-// Course routes
-router.get('/', getCoursesHandler);
-router.get('/:id', getCourseByIdHandler);
-router.post('/', createCourseHandler);
-router.put('/:id', updateCourseHandler);
-router.delete('/:id', deleteCourseHandler);
-
-// Student enrollment routes
-router.post('/:id/students', addStudentHandler);
-router.delete('/:id/students', removeStudentHandler);
+// Student routes
+router.post('/:id/enroll', courseController.enrollInCourse);
+router.post('/:id/unenroll', courseController.unenrollFromCourse);
 
 export default router;

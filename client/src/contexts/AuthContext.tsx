@@ -1,63 +1,57 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-
-interface User {
-  id: string;
-  email: string;
-  role: 'admin' | 'teacher' | 'student';
-  firstName: string;
-  lastName: string;
-}
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { User } from '../types/user';
 
 interface AuthContextType {
   user: User | null;
-  isAuthenticated: boolean;
-  login: (userData: User) => void;
+  login: (token: string, userData: User) => void;
   logout: () => void;
+  isAuthenticated: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | null>(null);
 
 interface AuthProviderProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Check if user data exists in localStorage
+    // Check for existing auth on mount
+    const token = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
-    if (storedUser) {
+    
+    if (token && storedUser) {
       try {
-        const userData = JSON.parse(storedUser);
+        const userData = JSON.parse(storedUser) as User;
         setUser(userData);
+        setIsAuthenticated(true);
       } catch (error) {
         console.error('Error parsing stored user data:', error);
+        localStorage.removeItem('token');
         localStorage.removeItem('user');
       }
     }
   }, []);
 
-  const login = (userData: User) => {
-    setUser(userData);
+  const login = (token: string, userData: User) => {
+    localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
+    setIsAuthenticated(true);
   };
 
   const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
     localStorage.removeItem('token');
-  };
-
-  const value = {
-    user,
-    isAuthenticated: !!user,
-    login,
-    logout
+    localStorage.removeItem('user');
+    setUser(null);
+    setIsAuthenticated(false);
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated }}>
       {children}
     </AuthContext.Provider>
   );

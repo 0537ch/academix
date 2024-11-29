@@ -1,149 +1,153 @@
 # Academic Management System
 
-A comprehensive web application for managing academic activities, built with React and Node.js.
+A comprehensive academic management system built with TypeScript, React, Node.js, Express, and MongoDB.
 
 ## Features
 
-- 🔐 **Authentication & Authorization**
-  - User registration and login
-  - Role-based access control (Admin/User)
-  - Protected routes
-  - Token-based authentication
-
-- 👨‍💼 **Admin Dashboard**
-  - Comprehensive admin interface
-  - Course management
-  - Student management
-  - User management
-  - Profile settings
-
-- 📚 **Course Management**
-  - Create, read, update, and delete courses
-  - Student enrollment
-  - Course scheduling
-  - Teacher assignment
+- User Authentication (JWT-based)
+- Role-based Access Control (Admin, Teacher, Student)
+- Course Management
+- Student Enrollment
+- Modern UI with Framer Motion animations
+- Comprehensive Error Handling
+- TypeScript Support
 
 ## Tech Stack
 
 ### Frontend
 - React with TypeScript
-- React Router for navigation
-- Context API for state management
-- Tailwind CSS for styling
+- React Router DOM for routing
+- Axios for API requests
+- React Toastify for notifications
 - Framer Motion for animations
-- Material Tailwind components
+- Tailwind CSS for styling
 
 ### Backend
-- Node.js & Express
+- Node.js with Express
+- TypeScript
 - MongoDB with Mongoose
 - JWT for authentication
-- TypeScript for type safety
+- Bcrypt for password hashing
+- CORS enabled
 
-## Getting Started
+## Prerequisites
 
-### Prerequisites
 - Node.js (v14 or higher)
-- MongoDB
-- Git
+- MongoDB (v4 or higher)
+- npm or yarn
 
-### Installation
+## Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/0537ch/academix.git
+git clone [your-repo-url]
 cd academic-system
 ```
 
-2. Install dependencies for both frontend and backend:
-```bash
-# Install frontend dependencies
-cd client
-npm install
+2. Install dependencies:
 
-# Install backend dependencies
-cd ../server
+For the backend:
+```bash
+cd server
+npm install
+```
+
+For the frontend:
+```bash
+cd client
 npm install
 ```
 
 3. Set up environment variables:
-Create `.env` files in both client and server directories:
 
-Server `.env`:
+Create a `.env` file in the server directory:
 ```env
-PORT=5002
-MONGODB_URI=mongodb://localhost:27017/academic-system
-JWT_SECRET=your_jwt_secret
+PORT=7000
+MONGODB_URI=mongodb://127.0.0.1:27017/academic_system
+JWT_SECRET=your-secret-key
+NODE_ENV=development
 ```
 
-4. Start the development servers:
+## Running the Application
 
-For backend:
+1. Start MongoDB:
+```bash
+mongod
+```
+
+2. Start the backend server:
 ```bash
 cd server
-npm run dev
-```
-
-For frontend:
-```bash
-cd client
 npm start
 ```
 
+3. Start the frontend development server:
+```bash
+cd client
+npm run dev
+```
+
 The application will be available at:
-- Frontend: http://localhost:3000
-- Backend: http://localhost:5002
+- Frontend: http://localhost:3000 or http://localhost:5173
+- Backend API: http://localhost:7000
 
-## Project Structure
+## Default Admin Account
 
-```
-academic-system/
-├── client/                 # Frontend React application
-│   ├── src/
-│   │   ├── components/    # Reusable components
-│   │   ├── contexts/      # React contexts
-│   │   ├── hooks/         # Custom hooks
-│   │   ├── pages/         # Page components
-│   │   └── App.tsx        # Main application component
-│   └── package.json
-│
-└── server/                # Backend Node.js application
-    ├── src/
-    │   ├── controllers/   # Route controllers
-    │   ├── models/        # Database models
-    │   ├── routes/        # API routes
-    │   └── app.ts         # Express application setup
-    └── package.json
-```
+Use these credentials to log in as admin:
+- Email: abrar@abrar.com
+- Password: abrar
 
 ## API Endpoints
 
 ### Authentication
-- POST `/api/auth/register` - Register new user
-- POST `/api/auth/login` - Login user
-
-### Courses
-- GET `/api/courses` - Get all courses
-- GET `/api/courses/:id` - Get course by ID
-- POST `/api/courses` - Create new course
-- PUT `/api/courses/:id` - Update course
-- DELETE `/api/courses/:id` - Delete course
-- POST `/api/courses/:id/enroll` - Enroll student in course
-- DELETE `/api/courses/:id/enroll` - Remove student from course
+- POST /api/auth/login - Login
+- POST /api/auth/register - Register new user
 
 ### Users
-- GET `/api/users` - Get all users (admin only)
-- GET `/api/users/:id` - Get user by ID
-- PUT `/api/users/:id` - Update user
-- DELETE `/api/users/:id` - Delete user
+- GET /api/users - Get all users (Admin only)
+- GET /api/users/:id - Get user by ID
+- PUT /api/users/:id - Update user
+- DELETE /api/users/:id - Delete user (Admin only)
+
+### Courses
+- GET /api/courses - Get all courses
+- POST /api/courses - Create new course (Admin/Teacher only)
+- GET /api/courses/:id - Get course by ID
+- PUT /api/courses/:id - Update course (Admin/Teacher only)
+- DELETE /api/courses/:id - Delete course (Admin only)
+
+### Students
+- GET /api/students/courses - Get enrolled courses
+- POST /api/students/enroll/:courseId - Enroll in course
+- DELETE /api/students/withdraw/:courseId - Withdraw from course
+
+## Error Handling
+
+The system includes comprehensive error handling:
+- Custom error classes for different types of errors
+- Detailed error messages in development
+- Sanitized error messages in production
+- Frontend toast notifications for errors
+- Network error handling
+- Authentication error handling
+
+## Security Features
+
+- JWT-based authentication
+- Password hashing with bcrypt
+- Role-based access control
+- CORS configuration
+- Error message sanitization
+- Password field exclusion from queries
 
 ## Contributing
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the LICENSE file for details.

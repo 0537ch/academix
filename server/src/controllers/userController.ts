@@ -48,31 +48,36 @@ export const userController = {
 
       // If name is provided, update it
       if (name) {
-        const [firstName, ...lastNameParts] = name.trim().split(' ');
-        user.firstName = firstName;
-        user.lastName = lastNameParts.join(' ') || firstName; // If no last name, use first name
+        const nameParts = name.trim().split(' ');
+        user.firstName = nameParts[0];
+        user.lastName = nameParts.slice(1).join(' ') || user.lastName;
       }
 
       // If password change is requested
       if (currentPassword && newPassword) {
         const isValidPassword = await bcrypt.compare(currentPassword, user.password);
         if (!isValidPassword) {
-          return res.status(401).json({ message: 'Current password is incorrect' });
+          return res.status(400).json({ message: 'Current password is incorrect' });
         }
-        user.password = await bcrypt.hash(newPassword, 10);
+
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
       }
 
       await user.save();
 
-      res.json({
+      // Return updated profile without password
+      const updatedProfile = {
         name: `${user.firstName} ${user.lastName}`,
         email: user.email,
         role: user.role,
-        profilePicture: null,
         lastLogin: user.updatedAt,
         createdAt: user.createdAt
-      });
+      };
+
+      res.json(updatedProfile);
     } catch (error) {
+      console.error('Error in updateProfile:', error);
       res.status(500).json({ message: 'Error updating profile' });
     }
   }

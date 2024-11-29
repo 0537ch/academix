@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import {
   AcademicCapIcon,
   UserGroupIcon,
@@ -22,22 +21,19 @@ const recentActivity = [
 
 export default function Dashboard() {
   return (
-    <div className="space-y-6">
-      <div className="sm:flex sm:items-center sm:justify-between">
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-        <button className="btn-primary mt-3 sm:mt-0">
+        <button className="btn-primary">
           New Announcement
         </button>
       </div>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((item, index) => (
-          <motion.div
+        {stats.map((item) => (
+          <div
             key={item.name}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="card"
+            className="bg-white rounded-lg shadow p-6"
           >
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -50,22 +46,17 @@ export default function Dashboard() {
                 </dl>
               </div>
             </div>
-          </motion.div>
+          </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="card">
+        <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Recent Activity</h2>
           <div className="flow-root">
             <ul className="-mb-8">
               {recentActivity.map((activity, activityIdx) => (
-                <motion.li
-                  key={activity.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: activityIdx * 0.1 }}
-                >
+                <li key={activity.id}>
                   <div className="relative pb-8">
                     {activityIdx !== recentActivity.length - 1 ? (
                       <span
@@ -75,7 +66,7 @@ export default function Dashboard() {
                     ) : null}
                     <div className="relative flex space-x-3">
                       <div>
-                        <span className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center ring-8 ring-white">
+                        <span className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
                           <UserGroupIcon className="h-5 w-5 text-primary-600" aria-hidden="true" />
                         </span>
                       </div>
@@ -93,30 +84,23 @@ export default function Dashboard() {
                       </div>
                     </div>
                   </div>
-                </motion.li>
+                </li>
               ))}
             </ul>
           </div>
         </div>
 
-        <div className="card">
+        <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <button className="btn-secondary flex items-center justify-center space-x-2">
-              <UserGroupIcon className="h-5 w-5" />
-              <span>Add Student</span>
+          <div className="space-y-4">
+            <button className="w-full btn-primary">
+              Create New Course
             </button>
-            <button className="btn-secondary flex items-center justify-center space-x-2">
-              <BookOpenIcon className="h-5 w-5" />
-              <span>New Course</span>
+            <button className="w-full btn-secondary">
+              View All Courses
             </button>
-            <button className="btn-secondary flex items-center justify-center space-x-2">
-              <CalendarIcon className="h-5 w-5" />
-              <span>Schedule</span>
-            </button>
-            <button className="btn-secondary flex items-center justify-center space-x-2">
-              <AcademicCapIcon className="h-5 w-5" />
-              <span>Grades</span>
+            <button className="w-full btn-secondary">
+              Manage Students
             </button>
           </div>
         </div>

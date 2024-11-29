@@ -36,25 +36,25 @@ const Register = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
-
     try {
-      const response = await fetch('http://localhost:7001/api/auth/register', {
+      const response = await fetch('http://localhost:7000/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
           email: formData.email,
           password: formData.password,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
           role: formData.role
         })
       });

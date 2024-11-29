@@ -1,124 +1,282 @@
-import { Request, Response } from 'express';
-import Course from '../models/Course';
+import { Request, Response, NextFunction } from 'express';
+import { Types } from 'mongoose';
+import Course, { ICourse } from '../models/Course';
+import User from '../models/User';
 
-// Get all courses
-export const getCourses = async (req: Request, res: Response) => {
-  try {
-    console.log('Getting all courses...');
-    const courses = await Course.find()
-      .populate('teacher', 'firstName lastName')
-      .populate('students', 'firstName lastName');
-    
-    console.log('Found courses:', courses.length);
-    res.json(courses);
-  } catch (error) {
-    console.error('Error fetching courses:', error);
-    res.status(500).json({ message: 'Error fetching courses' });
-  }
-};
+interface PopulatedUser {
+  _id: Types.ObjectId;
+  firstName: string;
+  lastName: string;
+}
 
-// Get course by ID
-export const getCourseById = async (req: Request, res: Response) => {
-  try {
-    console.log('Getting course by ID:', req.params.id);
-    const course = await Course.findById(req.params.id)
-      .populate('teacher', 'firstName lastName')
-      .populate('students', 'firstName lastName');
-    
-    if (!course) {
-      console.log('Course not found:', req.params.id);
-      return res.status(404).json({ message: 'Course not found' });
+interface CourseDocument extends Omit<ICourse, '_id' | 'teacher' | 'students'> {
+  _id: Types.ObjectId;
+  teacher: PopulatedUser;
+  students: PopulatedUser[];
+}
+
+interface CourseResponse {
+  _id: string;
+  name: string;
+  code: string;
+  description: string;
+  credits: number;
+  teacher: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+  };
+  students: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+  }[];
+  schedule: {
+    day: string;
+    startTime: string;
+    endTime: string;
+  };
+}
+
+const convertToResponse = (course: CourseDocument): CourseResponse => ({
+  ...course,
+  _id: course._id.toString(),
+  teacher: course.teacher ? {
+    ...course.teacher,
+    _id: course.teacher._id.toString()
+  } : {
+    _id: '',
+    firstName: 'Not',
+    lastName: 'Assigned'
+  },
+  students: (course.students || []).map(student => ({
+    ...student,
+    _id: student._id.toString()
+  }))
+});
+
+export const courseController = {
+  // Get all courses
+  getAllCourses: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      console.log('Getting all courses...');
+      const courses = await Course.find()
+        .populate<{ teacher: PopulatedUser }>('teacher', '_id firstName lastName')
+        .populate<{ students: PopulatedUser[] }>('students', '_id firstName lastName')
+        .lean();
+
+      console.log('Found courses:', courses);
+
+      // Type assertion after verifying the structure
+      const typedCourses = courses as unknown as CourseDocument[];
+      const coursesResponse = typedCourses.map(convertToResponse);
+      
+      console.log('Sending response:', coursesResponse);
+      res.json(coursesResponse);
+    } catch (error) {
+      console.error('Error getting courses:', error);
+      next(error);
     }
-    
-    console.log('Found course:', course);
-    res.json(course);
-  } catch (error) {
-    console.error('Error fetching course:', error);
-    res.status(500).json({ message: 'Error fetching course' });
-  }
-};
+  },
 
-// Create new course
-export const createCourse = async (req: Request, res: Response) => {
-  try {
-    const course = new Course(req.body);
-    await course.save();
-    res.status(201).json(course);
-  } catch (error) {
-    res.status(400).json({ message: 'Error creating course' });
-  }
-};
+  // Get course by ID
+  getCourseById: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const course = await Course.findById(req.params.id)
+        .populate<{ teacher: PopulatedUser }>('teacher', '_id firstName lastName')
+        .populate<{ students: PopulatedUser[] }>('students', '_id firstName lastName')
+        .lean();
 
-// Update course
-export const updateCourse = async (req: Request, res: Response) => {
-  try {
-    const course = await Course.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
-    
-    if (!course) {
-      return res.status(404).json({ message: 'Course not found' });
+      if (!course) {
+        res.status(404).json({ message: 'Course not found' });
+        return;
+      }
+
+      // Type assertion after verifying the structure
+      const typedCourse = course as unknown as CourseDocument;
+      const courseResponse = convertToResponse(typedCourse);
+      res.json(courseResponse);
+    } catch (error) {
+      next(error);
     }
-    
-    res.json(course);
-  } catch (error) {
-    res.status(400).json({ message: 'Error updating course' });
-  }
-};
+  },
 
-// Delete course
-export const deleteCourse = async (req: Request, res: Response) => {
-  try {
-    const course = await Course.findByIdAndDelete(req.params.id);
-    
-    if (!course) {
-      return res.status(404).json({ message: 'Course not found' });
-    }
-    
-    res.json({ message: 'Course deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error deleting course' });
-  }
-};
-
-// Add student to course
-export const addStudentToCourse = async (req: Request, res: Response) => {
-  try {
-    const course = await Course.findById(req.params.id);
-    
-    if (!course) {
-      return res.status(404).json({ message: 'Course not found' });
-    }
-    
-    const studentId = req.body.studentId;
-    if (!course.students.includes(studentId)) {
-      course.students.push(studentId);
+  // Create new course
+  createCourse: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      console.log('Creating course with data:', req.body);
+      const course = new Course(req.body);
       await course.save();
-    }
-    
-    res.json(course);
-  } catch (error) {
-    res.status(400).json({ message: 'Error adding student to course' });
-  }
-};
+      
+      const populatedCourse = await Course.findById(course._id)
+        .populate<{ teacher: PopulatedUser }>('teacher', '_id firstName lastName')
+        .populate<{ students: PopulatedUser[] }>('students', '_id firstName lastName')
+        .lean();
 
-// Remove student from course
-export const removeStudentFromCourse = async (req: Request, res: Response) => {
-  try {
-    const course = await Course.findById(req.params.id);
-    
-    if (!course) {
-      return res.status(404).json({ message: 'Course not found' });
+      if (!populatedCourse) {
+        res.status(404).json({ message: 'Course not found after creation' });
+        return;
+      }
+
+      // Type assertion after verifying the structure
+      const typedCourse = populatedCourse as unknown as CourseDocument;
+      const courseResponse = convertToResponse(typedCourse);
+      res.status(201).json(courseResponse);
+    } catch (error) {
+      console.error('Error creating course:', error);
+      next(error);
     }
-    
-    const studentId = req.body.studentId;
-    course.students = course.students.filter(id => id.toString() !== studentId);
-    await course.save();
-    
-    res.json(course);
-  } catch (error) {
-    res.status(400).json({ message: 'Error removing student from course' });
+  },
+
+  // Update course
+  updateCourse: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const course = await Course.findByIdAndUpdate(
+        req.params.id,
+        req.body,
+        { new: true }
+      )
+      .populate<{ teacher: PopulatedUser }>('teacher', '_id firstName lastName')
+      .populate<{ students: PopulatedUser[] }>('students', '_id firstName lastName')
+      .lean();
+
+      if (!course) {
+        res.status(404).json({ message: 'Course not found' });
+        return;
+      }
+
+      // Type assertion after verifying the structure
+      const typedCourse = course as unknown as CourseDocument;
+      const courseResponse = convertToResponse(typedCourse);
+      res.json(courseResponse);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  // Delete course
+  deleteCourse: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const course = await Course.findByIdAndDelete(req.params.id);
+      if (!course) {
+        res.status(404).json({ message: 'Course not found' });
+        return;
+      }
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  // Enroll in course
+  enrollInCourse: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const courseId = req.params.id;
+      const userId = req.user?._id;
+
+      if (!userId) {
+        res.status(401).json({ message: 'User not authenticated' });
+        return;
+      }
+
+      const course = await Course.findById(courseId);
+      if (!course) {
+        res.status(404).json({ message: 'Course not found' });
+        return;
+      }
+
+      const user = await User.findById(userId);
+      if (!user) {
+        res.status(404).json({ message: 'User not found' });
+        return;
+      }
+
+      // Check if already enrolled
+      const isEnrolled = course.students.some(studentId => studentId.equals(userId));
+      if (isEnrolled) {
+        res.status(400).json({ message: 'Already enrolled in this course' });
+        return;
+      }
+
+      // Add student to course and course to user's enrolled courses
+      course.students.push(userId);
+      user.enrolledCourses.push(new Types.ObjectId(courseId));
+
+      await Promise.all([course.save(), user.save()]);
+
+      const updatedCourse = await Course.findById(courseId)
+        .populate<{ teacher: PopulatedUser }>('teacher', '_id firstName lastName')
+        .populate<{ students: PopulatedUser[] }>('students', '_id firstName lastName')
+        .lean();
+
+      if (!updatedCourse) {
+        res.status(404).json({ message: 'Course not found after enrollment' });
+        return;
+      }
+
+      // Type assertion after verifying the structure
+      const typedCourse = updatedCourse as unknown as CourseDocument;
+      const courseResponse = convertToResponse(typedCourse);
+      res.json(courseResponse);
+    } catch (error) {
+      console.error('Error enrolling in course:', error);
+      next(error);
+    }
+  },
+
+  // Unenroll from course
+  unenrollFromCourse: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const courseId = req.params.id;
+      const userId = req.user?._id;
+
+      if (!userId) {
+        res.status(401).json({ message: 'User not authenticated' });
+        return;
+      }
+
+      const course = await Course.findById(courseId);
+      if (!course) {
+        res.status(404).json({ message: 'Course not found' });
+        return;
+      }
+
+      const user = await User.findById(userId);
+      if (!user) {
+        res.status(404).json({ message: 'User not found' });
+        return;
+      }
+
+      // Check if not enrolled
+      const isEnrolled = course.students.some(studentId => studentId.equals(userId));
+      if (!isEnrolled) {
+        res.status(400).json({ message: 'Not enrolled in this course' });
+        return;
+      }
+
+      // Remove student from course and course from user's enrolled courses
+      course.students = course.students.filter(studentId => !studentId.equals(userId));
+      user.enrolledCourses = user.enrolledCourses.filter(courseId => !courseId.equals(courseId));
+
+      await Promise.all([course.save(), user.save()]);
+
+      const updatedCourse = await Course.findById(courseId)
+        .populate<{ teacher: PopulatedUser }>('teacher', '_id firstName lastName')
+        .populate<{ students: PopulatedUser[] }>('students', '_id firstName lastName')
+        .lean();
+
+      if (!updatedCourse) {
+        res.status(404).json({ message: 'Course not found after unenrollment' });
+        return;
+      }
+
+      // Type assertion after verifying the structure
+      const typedCourse = updatedCourse as unknown as CourseDocument;
+      const courseResponse = convertToResponse(typedCourse);
+      res.json(courseResponse);
+    } catch (error) {
+      console.error('Error unenrolling from course:', error);
+      next(error);
+    }
   }
 };

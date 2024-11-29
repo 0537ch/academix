@@ -6,21 +6,32 @@ import userRoutes from './routes/userRoutes';
 import courseRoutes from './routes/courseRoutes';
 import studentRoutes from './routes/studentRoutes';
 import { config } from './config';
+import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
 
 // CORS configuration
 const corsOptions = {
-  origin: 'http://localhost:3000', // React app's default port
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-  optionsSuccessStatus: 200
+  origin: true, // Allow all origins
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  credentials: false
 };
 
-// Middleware
+// Apply CORS before other middleware
 app.use(cors(corsOptions));
+
+// Body parser middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  console.log('Headers:', req.headers);
+  console.log('Body:', req.body);
+  next();
+});
 
 // Database connection
 mongoose.connect(config.mongoUri)
@@ -33,10 +44,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/students', studentRoutes);
 
-// Error handling middleware
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
-});
+// Error handling
+app.use(errorHandler);
 
 export default app;

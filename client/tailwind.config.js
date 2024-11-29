@@ -1,36 +1,35 @@
-const withMT = require("@material-tailwind/react/utils/withMT");
-
 /** @type {import('tailwindcss').Config} */
-module.exports = withMT({
+module.exports = {
   content: [
-    "./src/**/*.{js,jsx,ts,tsx}",
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
       colors: {
         primary: {
-          50: '#f5f7ff',
-          100: '#ebf0fe',
-          200: '#dde5fd',
-          300: '#c3d0fb',
-          400: '#9ab1f8',
-          500: '#6d8bf4',
-          600: '#4865ed',
-          700: '#3a4edb',
-          800: '#3342b8',
-          900: '#2f3c93',
+          50: '#f0f9ff',
+          100: '#e0f2fe',
+          200: '#bae6fd',
+          300: '#7dd3fc',
+          400: '#38bdf8',
+          500: '#0ea5e9',
+          600: '#0284c7',
+          700: '#0369a1',
+          800: '#075985',
+          900: '#0c4a6e',
         },
         secondary: {
-          50: '#f8f9fa',
-          100: '#f1f3f5',
-          200: '#e9ecef',
-          300: '#dee2e6',
-          400: '#ced4da',
-          500: '#adb5bd',
-          600: '#868e96',
-          700: '#495057',
-          800: '#343a40',
-          900: '#212529',
+          50: '#f8fafc',
+          100: '#f1f5f9',
+          200: '#e2e8f0',
+          300: '#cbd5e1',
+          400: '#94a3b8',
+          500: '#64748b',
+          600: '#475569',
+          700: '#334155',
+          800: '#1e293b',
+          900: '#0f172a',
         }
       },
       fontFamily: {
@@ -39,4 +38,4 @@ module.exports = withMT({
     },
   },
   plugins: [],
-});
+}

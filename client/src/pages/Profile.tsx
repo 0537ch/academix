@@ -30,11 +30,27 @@ export default function Profile() {
     try {
       console.log('Fetching profile...');
       const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Please login to view your profile');
+        setLoading(false);
+        return;
+      }
       console.log('Token:', token);
       const response = await api.get('/users/profile');
       console.log('Profile response:', response.data);
-      setProfile(response.data);
-      setFormData(prev => ({ ...prev, name: response.data.name }));
+      
+      // Set default values if data is missing
+      const profileData: UserProfile = {
+        name: response.data.name || `${response.data.firstName} ${response.data.lastName}`,
+        email: response.data.email || 'Not set',
+        role: response.data.role || 'Not set',
+        profilePicture: response.data.profilePicture || null,
+        lastLogin: response.data.lastLogin ? new Date(response.data.lastLogin).toLocaleString() : 'Never',
+        createdAt: response.data.createdAt ? new Date(response.data.createdAt).toLocaleString() : 'Unknown'
+      };
+      
+      setProfile(profileData);
+      setFormData(prev => ({ ...prev, name: profileData.name }));
       setLoading(false);
     } catch (error: any) {
       console.error('Error fetching profile:', error.response || error);
